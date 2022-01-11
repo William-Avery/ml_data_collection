@@ -2,6 +2,7 @@ from mss import mss
 import cv2, os
 import numpy as np
 import uuid
+import base64
 
 # Used for rapid mouse position capture
 from ctypes import windll, Structure, c_long
@@ -42,8 +43,13 @@ class CaptureHelper:
             
             # Resize Frame
             resized_frame = cv2.resize(frame,(self.RESIZE_DIMENSION,self.RESIZE_DIMENSION))
-            cv2.imwrite(os.path.join(self.SAVE_PATH, f'{id}.jpg'), resized_frame)
-            return resized_frame, id
+            
+            # Encoding Trial
+            _, buffer = cv2.imencode('.jpg', resized_frame)
+            final_image = base64.b64encode(buffer)
+            
+            #cv2.imwrite(os.path.join(self.SAVE_PATH, f'{id}.jpg'), resized_frame)
+            return final_image, id
         
 
             
