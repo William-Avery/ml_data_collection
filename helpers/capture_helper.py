@@ -4,7 +4,7 @@ import numpy as np
 import uuid
 
 # Used for rapid mouse position capture
-from ctypes import windll, Structure, c_long, byref
+from ctypes import windll, Structure, c_long
 
 class POINT(Structure):
     _fields_ = [("x", c_long), ("y", c_long)]
@@ -45,11 +45,7 @@ class CaptureHelper:
             cv2.imwrite(os.path.join(self.SAVE_PATH, f'{id}.jpg'), resized_frame)
             return resized_frame, id
         
-    # Returns mouse position in { x, y } object
-    def mouse_pos_query(self):
-        pt = POINT()
-        windll.user32.GetCursorPos(byref(pt))
-        return { "x": pt.x, "y": pt.y}
+
             
     # Save Images
     def save(self, image):

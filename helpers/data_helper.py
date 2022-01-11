@@ -2,19 +2,17 @@ import win32api
 import time
 import pandas as pd
 import keyboard
-import pickle
+import os
 
 from datetime import datetime
 from .capture_helper import CaptureHelper
+from .joystick_helper import JoyStick
 
+PICKLE_PATH = './helpers/data.pkl'
 
 class DataHelper:
     def __init__(self):
-        self.DATABASE_FILENAME = 'serialized_data.pkl'
-        
-    def frame_to_json(self):
-        raise NotImplementedError
-
+        self.DATABASE_FILENAME = PICKLE_PATH
 
     def countdown(self):
         t = 3
@@ -26,18 +24,27 @@ class DataHelper:
             t -= 1
 
     def init_datarecorder(self):
-        # Open up pickle file database
-        pkl_file = open(self.DATABASE_FILENAME, 'wb')
-        
-        # Initialize image recorder
-        capture_helper = CaptureHelper()
+        # 1. Check if pickle db exists. If not, create empty dataframe
+        if not os.path.isfile(PICKLE_PATH):
+            df = pd.DataFrame()
+            pd.to_pickle(df, PICKLE_PATH)
 
-        # Start Countdown
+        # 2. Create empty dataframe to append to
+        data = pd.read_pickle(PICKLE_PATH)
+
+        # 3. Initialize image recorder & joystick session
+        capture_helper = CaptureHelper()
+        movement_session = JoyStick()
+
+        # 4. Start Countdown
         self.countdown()
         print("Recording Started!")
         
+        # 5. Loop through recorder
         while True:
-            frame_data = pd.DataFrame({ 
+            
+            # 6. Initialize blank values
+            frame_data = pd.DataFrame({
                 'w': 0,
                 's': 0,
                 'a': 0,
@@ -50,11 +57,16 @@ class DataHelper:
                 'Shift': 0,
                 'lmb': 0,
                 'rmb': 0,
-                'time': datetime.now().timestamp(),
-                'path': ''
+                'time': datetime.now().timestamp(),       
+                'dfc': 0, # Distance from center
+                'mouse_x': 0,
+                'mouse_y': 0,
+                'slope': 0,
+                'intercept': 0,
+                'img_path': ''
             }, index=[0]) 
-
-            try:  # used try so that if user pressed other than the given key error will not be shown         
+            
+            try:       
                 if keyboard.is_pressed('Esc'):
                     print("Recording Stopped!")
                     break
@@ -96,14 +108,19 @@ class DataHelper:
                 
                 # Grab image
                 _, id = capture_helper.frame_grab()
-                frame_data['path'] = f'/images/{id}.png'
+                frame_data['img_path'] = f'/images/{id}.png'
                 
+                # Grab mouse
+                mouse_data = movement_session.mouse_info()
+                frame_data['dfc'] = mouse_data[0]
+                frame_data['mouse_x'] = mouse_data[1]
+                frame_data['mouse_y'] = mouse_data[2]
+                frame_data['slope'] = mouse_data[3]
+                frame_data['intercept'] = mouse_data[4]
+                                         
                 # Save results to pickle file
-                pickle.dump(frame_data, pkl_file, pickle.HIGHEST_PROTOCOL)
+                data = data.append(frame_data, ignore_index = True)
             except:
                 break
-        pkl_file.close()
-        
-    def Test(self):
-        raise NotImplementedError
-            
+        # Save Information to pickle
+        pd.to_pickle(data, PICKLE_PATH)

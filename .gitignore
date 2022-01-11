@@ -1,3 +1,3 @@
 *.png
 *.jpg
-serialized_data.pkl
+helpers/serialized_data.pkl
