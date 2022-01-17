@@ -25,7 +25,7 @@ class CaptureHelper:
         self.CAPTURE_BOTTOM_POS = None
         self.init_screensize()
 
-    # Returns dimentions of the primary display
+    # Returns dimensions of the primary display
     def init_screensize(self):
         user32 = windll.user32
         self.WINDOW_WIDTH, self.WINDOW_HEIGHT = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
